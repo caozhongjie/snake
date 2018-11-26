@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+</body>
+</html>
+<script>
+    var map;
+    var snake;
+    var food;
+    var timer;
+    var count=0;
+    window.onload=function () {
+        //实例化地图对象
+        //将地图对象添加到body元素里
+        map = new Map();
+        map.show();
+
+        //实例化食物对象
+        //将食物对象放到地图上
+        food = new Food();
+        food.show();
+        //实例化蛇对象
+        //将蛇放在地图上
+        snake = new Snake()
+        snake.show();
+
+        timer = setInterval('snake.move()',100);
+        document.onkeyup=function (event) {
+            var code;
+            if(window.event){
+                code = window.event.keyCode ;//判断IE浏览器
+            }else{
+                code =  code.keyCode;
+            }
+            snake.setDirect(code)
+        }
+
+    }
+
+    //地图
+    function Map() {
+        this.width = 800;//宽度
+        this.height = 400;//高度
+        this.color ='#eeeeee';//背景颜色
+        this.position ='absolute';//定位方式
+        this._map = null;//用于保存地图dom元素
+        this.show=function () {
+           this._map = document.createElement('div');
+           this._map.style.width = this.width+'px';
+           this._map.style.height = this.height+'px';
+           this._map.style.backgroundColor = this.color;
+           this._map.style.position = this.position;
+           document.getElementsByTagName('body')[0].appendChild(this._map);
+;        }
+    }
+
+    //食物
+    function Food() {
+        this.width = 20;//宽度
+        this.height = 20;//高度
+        this.color ='green';//背景颜色
+        this.position ='absolute';//定位方式
+        this.x = 0;//横向第几格
+        this.y = 0;//纵向第几格
+        this._food = null;
+        this.show = function () {
+            if(this._food==null){
+                this._food = document.createElement('div');//创建div
+                this._food.style.width = this.width+'px';
+                this._food.style.height = this.height+'px';
+                this._food.style.backgroundColor = this.color;
+                this._food.style.position = this.position;
+                //将食物放置在地图上
+                map._map.appendChild(this._food);
+            }
+            console.log(this.x)
+            console.log(this.y)
+            this.x = Math.floor(Math.random()*40)//0-39
+            this.y = Math.floor(Math.random()*20)//0-19
+            this._food.style.left = (this.x*20)+'px';//设置精确位置
+            this._food.style.top = (this.y*20)+'px';
+        }
+    }
+
+    //蛇
+    function Snake() {
+        this.width = 20;//蛇节宽度
+        this.height = 20;//蛇节高度
+        this.direct ='right';//蛇的移动方向
+        this.body=[
+            [3,3,'red',null],[2,3,'blue',null],[1,3,'blue',null]//所有蛇节信息  null用于保存当前dom元素
+        ];
+        //控制蛇的方向
+        this.setDirect=function (code) {
+            switch (code){
+                case 37:
+                    this.direct = 'left';
+                    break;
+                case 38:
+                    this.direct = 'up';
+                    break;
+                case 39:
+                    this.direct = 'right';
+                    break;
+                case 40:
+                    this.direct = 'down';
+                    break;
+            }
+        }
+        this.position ='absolute';//定位方式
+        this.x = 0;//横向第几格
+        this.y = 0;//纵向第几格
+        this.show=function () {
+            for(var i = 0;i<this.body.length;i++){
+                //当DOM节点已经被创建后就不再创建了
+                if(this.body[i][3]==null){
+                    this.body[i][3] = document.createElement('div');
+                    this.body[i][3].style.width = this.width+'px';
+                    this.body[i][3].style.height = this.height+'px';
+                    this.body[i][3].style.position = this.position;
+                    this.body[i][3].style.backgroundColor = this.body[i][2];//背景颜色
+                    map._map.appendChild(this.body[i][3]);
+                }
+                //如果不是第一次执行，那么只执行下面两句
+                this.body[i][3].style.left = (this.body[i][0]*20)+'px';//设置精确位置
+                this.body[i][3].style.top = (this.body[i][1]*20)+'px';//设置精确位置
+            }
+        }
+        //控制蛇的移动
+        this.move=function () {
+            var length = this.body.length;
+            //蛇身的移动
+            for(var i = length-1;i>0;i--){
+                this.body[i][0]=this.body[i-1][0];//让后一个蛇节代替他前面蛇节的位置x
+                this.body[i][1]=this.body[i-1][1];//让后一个蛇节代替他前面蛇节的位置Y
+            }
+            //运行上面的for循环结束之后，除了蛇头，所有的蛇神坐标都向前移动一次
+
+
+            //判断蛇的方向，设置新的坐标
+            switch (this.direct){
+                case 'left':
+                    this.body[0][0]-=1;
+                    break;
+                case 'right':
+                    this.body[0][0]+=1;
+                    break;
+                case 'up':
+                    this.body[0][1]-=1;
+                    break;
+                case 'down':
+                    this.body[0][1]+=1;
+                    break;
+            }
+            //判断吃到食物
+            if(this.body[0][0] == food.x && this.body[0][1] ==food.y){
+                //积分显示
+                //添加新的蛇节，坐标为最后一个蛇节的坐标
+                this.body.push([this.body[length-1][0],this.body[length-1][1],'blue',null])
+                count+=1;
+               document.title = '共'+count+'分';
+                food.show();
+            }
+            if(this.body[0][0]==40 || this.body[0][0]<0 || this.body[0][1]==-1 || this.body[0][1]==20 ){
+                clearInterval(timer);
+                alert('game over');
+                return;
+            }
+            //判断吃到自己死
+            for(var i = 1;i<this.body.length;i++){
+               if(this.body[0][0] == this.body[i][0] && this.body[0][1] == this.body[i][1]){
+                   clearInterval(timer);
+                   alert('game over');
+                   return;
+               }
+            }
+            this.show()
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+</script>
